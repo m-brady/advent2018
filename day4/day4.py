@@ -41,6 +41,7 @@ print(int(sleepy_guard) * hour)
 # Part 2
 sleepy_guard, maxtime = 0, 0
 
+
 for guard, guard_naps in naps.items():
     if max(guard_naps) > maxtime:
         sleepy_guard, maxtime = guard, max(guard_naps)
