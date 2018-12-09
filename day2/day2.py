@@ -1,6 +1,4 @@
-# PART 1
-with open('input.txt', 'r') as f:
-    lines = [line.rstrip() for line in f]
+c
 
 twos = 0
 threes = 0

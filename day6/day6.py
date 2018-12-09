@@ -10,28 +10,70 @@ with open('input.txt', 'r') as f:
             max_y = coord[1]
         coords.append(coord)
 
-coords = sorted(coords)
+sorted_coords = sorted(coords)
 
-coords = [(i, coords[i]) for i in range(len(coords))]
+coords = [(i, sorted_coords[i]) for i in range(len(coords))]
 
-print(coords)
+stack = coords
 
-stack = []
+grid = [[-1 for j in range(max_y + 1)] for i in range(max_x + 1)]
 
-grid = {}
-
-print(grid)
+moves = [(-1, 0), (0, -1), (0, 1), (1, 0)]
 while len(stack) > 0:
 
     new_stack = []
 
+    candidates = {}
+
     for guy in stack:
         guy_id, coords = guy[0], guy[1]
 
-        if grid.get(coords) is not None:
+        if grid[coords[0]][coords[1]] == -1:
+            candidates.setdefault(coords, set()).add(guy_id)
 
+    for k, v in candidates.items():
+        key = next(iter(v)) if len(v) == 1 else '.'
 
+        grid[k[0]][k[1]] = key
+
+        for move in moves:
+            x, y = k[0] + move[0], k[1] + move[1]
+            if 0 <= x < len(grid) and 0 <= y < len(grid[x]):
+                new_stack.append((key, (x, y)))
 
     stack = new_stack
 
+counts = {}
 
+infinites = set()
+
+for i in range(max_x):
+    infinites.add(grid[i][0])
+    infinites.add(grid[i][-1])
+for i in range(max_y):
+    infinites.add(grid[0][i])
+    infinites.add(grid[-1][i])
+
+for row in grid:
+    for guy in row:
+        if guy not in infinites:
+            counts[guy] = counts.setdefault(guy, 0) + 1
+
+print(sorted(counts.values(), reverse=True)[0])
+
+
+# Part 2
+
+def distance(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
+grid = [[-1 for j in range(max_y + 1)] for i in range(max_x + 1)]
+count = 0
+for i in range(len(grid)):
+    for j in range(len(grid[i])):
+        dis = sum([distance((i, j), coord) for coord in sorted_coords])
+        if dis < 10000:
+            count += 1
+
+print(count)
