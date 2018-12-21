@@ -1,62 +1,54 @@
-serial = 39
-size = 300
 
-grid = [[0 for j in range(size)] for i in range(size)]
+def go(serial, size, square_size):
 
-for x in range(size):
-    rack_id = (x + 1) + 10
-    for y in range(size):
-        power_level = rack_id * (y + 1)
-        power_level += serial
-        power_level *= rack_id
+    grid = [[0 for j in range(size)] for i in range(size)]
 
-        power_level = (power_level % 1000) // 100
-        power_level -= 5
+    for x in range(size):
+        rack_id = (x + 1) + 10
+        for y in range(size):
+            power_level = rack_id * (y + 1)
+            power_level += serial
+            power_level *= rack_id
 
-        grid[y][x] = power_level
+            power_level = (power_level % 1000) // 100
+            power_level -= 5
 
-top_left = (0, 0)
-max_sum = 0
+            grid[y][x] = power_level
 
+    col_sums = [sum(grid[j][i] for j in range(square_size)) for i in range(size)]
 
-cur_sum = 0
+    square_sums = [[]]
+    cur_sum = col_sums[0] + col_sums[1]
+    for i in range(0, size - 2):
+        prev_col = 0 if i == 0 else col_sums[i - 1]
+        cur_sum = cur_sum - prev_col + col_sums[i + 2]
+        square_sums[0].append(cur_sum)
 
-print(grid)
+    row_sums = []
+    for row in range(size):
+        row_sum, cur_sum = [], grid[row][0] + grid[row][1]
+        for col in range(size - 2):
+            prev = 0 if col == 0 else grid[row][col - 1]
+            cur_sum = cur_sum - prev + grid[row][col + 2]
+            row_sum.append(cur_sum)
+        row_sums.append(row_sum)
 
-for j in range(3):
-    for i in range(3):
-        cur_sum += grid[j][i]
+    for row in range(1, size - 2):
+        row_squares = []
+        for col in range(0, size - 2):
+            prev_row = row_sums[row - 1][col]
+            last_square = square_sums[row - 1][col]
+            square_sum = last_square - prev_row + row_sums[row + 2][col]
+            row_squares.append(square_sum)
+        square_sums.append(row_squares)
 
-print(cur_sum)
+    max_guy, coords = -1, ()
 
-col_sums = []
-for i in range(size):
-    col_sums.append(grid[0][i] + grid[1][i] + grid[2][i])
-print(col_sums)
+    for y in range(len(square_sums)):
+        for x in range(len(square_sums[y])):
+            if square_sums[y][x] > max_guy:
+                coords = (x,y)
+                max_guy = square_sums[y][x]
+    print(max_guy, coords)
 
-square_sums = [[col_sums[0] + col_sums[1] + col_sums[2]]]
-for i in range(1,size - 2):
-    square_sums[0].append(square_sums[0][i-1] - col_sums[i-1] + col_sums[i+2])
-
-print(square_sums)
-
-# for x in range(1,size-2):
-#     old_col = grid[0][x-1] + grid[1][x-1] + grid[2][x-1]
-#     new_col = grid[0][x+2] + grid[1][x+2] + grid[2][x+2]
-#     col_sums.append(col_sums[x-1] - old_col + new_col)
-#
-# print(col_sums)
-
-
-
-
-
-
-y = 0
-for x in range(size-2):
-    left_col_sum = grid[y][x-1] + grid[y+1][x-1] + grid[y+2][x-1]
-    right_col_sum = grid[y][x+2] + grid[y+1][x+2] + grid[y+2][x+2]
-
-
-
-
+go(3628, 300, 3)
