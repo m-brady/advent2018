@@ -1,56 +1,29 @@
-from typing import Tuple
-
-
 def get_input():
     grid = []
-
-    def get_above():
-        return grid[-1][len(row)][1][0]
-
-    def get_left():
-        return row[-1][1][0]
+    carts = {}
+    cart_id = 0
 
     with open('input-example.txt', 'r') as f:
-        track = 0
+        y = 0
         for line in f:
-            row = []
+            row, x = [], 0
             for c in line.rstrip('\n'):
-                grid_ids = []
-                if c == '/':
-                    # Bottom right
-                    if row and row[-1][0] in '-+':
-                        grid_ids.append(get_left())
-                    else:
-                        # Top left (new track)
-                        grid_ids.append(track)
-                        track += 1
-                    pass
-                elif c == '\\':
-                    # Top right
-                    if row and row[-1][0] in '-+':
-                        grid_ids.append(get_left())
-                    else:
-                        # Bottom left
-                        grid_ids.append(0)
-                elif c == '-':
-                    grid_ids.append(get_left())
-                elif c == '|':
-                    # Get track id of row above
-                    grid_ids.append(get_above())
-                    pass
-                elif c == '+':
-                    # Get track id of left and above
-                    grid_ids.append(get_left())
-                    grid_ids.append(get_above())
-                elif c in '<>':
-                    grid_ids.append(get_left())
+                if c in '<>':
+                    row.append('-')
+                    carts[cart_id] = ([c, [x, y], -1])
+                    cart_id += 1
                 elif c in '^v':
-                    grid_ids.append(get_above())
-                row.append((c, grid_ids))
+                    row.append('|')
+                    carts[cart_id] = ([c, [x, y], -1])
+                    cart_id += 1
+                else:
+                    row.append(c)
+                x += 1
 
             grid.append(row)
+            y += 1
 
-    return grid
+    return grid, carts
 
 
 def turn_curve(c_dir, point):
@@ -61,40 +34,63 @@ def turn_curve(c_dir, point):
 
 
 def turn(c_dir, c_turn):
-    types = '^<v>'
-    return types[types.index(c_dir) + c_turn]
+    types = '^>v<'
+    return types[(types.index(c_dir) + c_turn) % len(types)]
 
 
-grid = get_input()
-carts = []
-
-for row in range(len(grid)):
-    for col in range(len(grid[row])):
-        if grid[row][col][0] in 'v^<>':
-            carts.append([grid[row][col][0], (row, col), -1])
-print(carts)
+grid, carts = get_input()
 
 crash = None
+
+positions = {}
+positions_inv = {}
+
 while not crash:
-    for cart in carts:
-        cart_dir = cart[0]
-        cart_pos: Tuple[int, int] = cart[1]
-        cart_turn = cart[2]
-        new_pos = None
+
+    sorted_carts = sorted(carts.items(), key=lambda c: (c[1][1][1], c[1][1][0]))
+    for cart in sorted_carts:
+        cart_id = cart[0]
+        cart_dir = cart[1][0]
+        cart_pos = cart[1][1]
+        cart_turn = cart[1][2]
+
+        if cart_id not in carts.keys():
+            continue
+
+        positions_inv.setdefault((cart_pos[0], cart_pos[1]), set()).discard(cart_id)
 
         if cart_dir == '>':
-            new_pos = grid[cart_pos[0]][cart_pos[1] + 1]
+            cart_pos[0] += 1
         elif cart_dir == '<':
-            new_pos = grid[cart_pos[0]][cart_pos[1] - 1]
+            cart_pos[0] -= 1
         elif cart_dir == '^':
-            new_pos = grid[cart_pos[0] - 1][cart_pos[1]]
+            cart_pos[1] -= 1
         elif cart_dir == 'v':
-            new_pos = grid[cart_pos[0] + 1][cart_pos[1]]
+            cart_pos[1] += 1
 
-        if new_pos[0] == '+':
-            new_dir = turn(cart_dir, cart_turn)
-        elif new_pos[0] in '\\/':
-            new_dir = turn(cart_dir, turn_curve(cart_dir, new_pos))
-        elif new_pos[0] == '-':
+        grid_val = grid[cart_pos[1]][cart_pos[0]]
 
-        print("CRASH")
+        if grid_val == '+':
+            cart[1][0] = turn(cart_dir, cart_turn)
+            cart[1][2] = (cart_turn + 2) % 3 - 1
+        elif grid_val in '\\/':
+            cart[1][0] = turn(cart_dir, turn_curve(cart_dir, grid_val))
+
+        inv = positions_inv.setdefault((cart_pos[0], cart_pos[1]), set())
+        inv.add(cart_id)
+
+        positions[cart_id] = (cart_pos[0], cart_pos[1])
+
+        if len(inv) == 2:
+            for cid in inv:
+                carts.pop(cid)
+                positions.pop(cid)
+
+
+
+
+
+
+    if len(carts) == 1:
+        print(carts)
+        break
