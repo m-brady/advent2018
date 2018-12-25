@@ -23,12 +23,20 @@ def adjacent(square):
 def walk(start, targets):
     seen = set()
 
+    to_do = deque()
     def walk(square):
         seen.add(square)
         adj = [s for s in adjacent(square) if s not in seen]
 
-def get_in_range(targets):
+        walk(adj)
 
+
+def get_in_range(targets):
+    in_range = set()
+    for target in targets:
+        for adj in adjacent(target):
+            in_range.add(adj)
+    return in_range
 
 
 with open('input.txt', 'r') as f:
