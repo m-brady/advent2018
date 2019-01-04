@@ -49,7 +49,7 @@ def attack(pos, targets):
 
 
 def walk(start, targets):
-    seen = {}
+    seen = set()
     heap = [(0, [start])]
     heapq.heapify(heap)
 
@@ -59,9 +59,8 @@ def walk(start, targets):
         guy = heapq.heappop(heap)
         depth, path, cur = guy[0], guy[1], guy[1][-1]
 
-        best_depth = seen.get(cur)
-        if not best_depth or depth < best_depth:
-            seen[cur] = depth
+        if cur not in seen:
+            seen.add(cur)
 
             if cur in targets:
                 paths.append((depth, path))
